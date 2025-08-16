@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Test API</title>
+</head>
+
+<body>
+    <h1>Test API de Efemérides</h1>
+    <button onclick="testAPI()">Probar API</button>
+    <pre id="result"></pre>
+
+    <script>
+        async function testAPI() {
+            const resultElement = document.getElementById('result');
+            resultElement.textContent = 'Probando API...';
+
+            try {
+                const response = await fetch('/api/generate-ephemeris', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        forceGenerate: true
+                    })
+                });
+
+                const result = await response.json();
+                resultElement.textContent = JSON.stringify(result, null, 2);
+
+                if (result.success) {
+                    console.log('✅ ÉXITO:');
+                    console.log('Evento:', result.ephemeris.event);
+                    console.log('Fecha:', result.ephemeris.date);
+                    console.log('Display Date:', result.ephemeris.display_date);
+                }
+            } catch (error) {
+                resultElement.textContent = 'Error: ' + error.message;
+                console.error('❌ Error:', error);
+            }
+        }
+    </script>
+</body>
+
+</html>

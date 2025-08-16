@@ -60,11 +60,9 @@ export function TerminalEphemeris() {
       }
 
       // Si no hay efeméride para hoy, generar una nueva llamando a la API
-      console.log('No hay efeméride para hoy, generando una nueva...')
       const response = await fetch('/api/generate-ephemeris', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ forceGenerate: true })
+        headers: { 'Content-Type': 'application/json' }
       })
 
       if (response.ok) {
@@ -75,13 +73,19 @@ export function TerminalEphemeris() {
           return
         }
       } else {
-        console.error('Error al generar efeméride:', await response.text())
+        // Solo log en desarrollo
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error al generar efeméride:', await response.text())
+        }
       }
 
       setTodayEphemeris("No se pudo cargar ni generar efeméride para hoy.")
       setIsShowingTodayEphemeris(true)
     } catch (error) {
-      console.error('Error fetching today ephemeris:', error)
+      // Solo log en desarrollo
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error fetching today ephemeris:', error)
+      }
       setTodayEphemeris("Error al cargar efeméride del día.")
       setIsShowingTodayEphemeris(true)
     }
@@ -99,7 +103,10 @@ export function TerminalEphemeris() {
         setIsShowingTodayEphemeris(false)
       }
     } catch (error) {
-      console.error('Error fetching random ephemeris:', error)
+      // Solo log en desarrollo
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error fetching random ephemeris:', error)
+      }
       setTodayEphemeris("No hay efeméride disponible.")
       setIsShowingTodayEphemeris(false)
     }
@@ -135,7 +142,10 @@ export function TerminalEphemeris() {
               setCommandHistory((prev) => [...prev, "✓ Efeméride del día cargada (respaldo)"])
             }
           } catch (error) {
-            console.error('Error generating ephemeris:', error)
+            // Solo log en desarrollo
+            if (process.env.NODE_ENV === 'development') {
+              console.error('Error generating ephemeris:', error)
+            }
             // Si falla, usar efeméride del día como respaldo
             await loadTodayEphemeris()
             setCommandHistory((prev) => [...prev, "✓ Efeméride del día cargada (respaldo)"])
@@ -260,7 +270,7 @@ export function TerminalEphemeris() {
               <span className="text-orange-400">help</span> - Mostrar ayuda
             </div>
             <div>
-              <span className="text-orange-400">refresh</span> - Generar nueva efeméride del día
+              <span className="text-orange-400">refresh</span> - Refrescar efeméride del día
             </div>
             <div>
               <span className="text-orange-400">history</span> - Ver historial
@@ -288,7 +298,7 @@ export function TerminalEphemeris() {
           />
           <span className="ml-1 animate-pulse text-green-400">█</span>
         </form>
-        {/* footer with link to my web https://davidcaro.me/ */}
+        {/* footer */}
         <div className="mt-8 text-center text-gray-500 text-xs">
           Hecho con ❤️ por{" "}
           <a

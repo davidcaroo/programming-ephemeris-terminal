@@ -5,13 +5,12 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(
-    'Missing Supabase environment variables. Please check your .env.local file and ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set.'
+    'Missing Supabase environment variables. Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.'
   )
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// Tipos TypeScript para la tabla ephemerides
 export interface Ephemeris {
   id: string
   date: string
@@ -23,116 +22,105 @@ export interface Ephemeris {
   updated_at?: string
 }
 
-// Función para obtener todas las efemérides
-export async function getEphemerides(): Promise<Ephemeris[]> {
-  const { data, error } = await supabase
-    .from('ephemerides')
-    .select('*')
-    .order('date', { ascending: true })
-
+// ---- Helpers ----
+async function queryEphemerides(query: any): Promise<Ephemeris[]> {
+  const { data, error } = await query
   if (error) {
-    console.error('Error fetching ephemerides:', error)
+    console.error('Supabase query error:', error)
     return []
   }
-
   return data || []
 }
 
-// Función para obtener efemérides del día actual (MM-DD)
+// ---- CRUD ----
+
+// Todas las efemérides
+export async function getEphemerides(): Promise<Ephemeris[]> {
+  return queryEphemerides(
+    supabase.from('ephemerides').select('*').order('date', { ascending: true })
+  )
+}
+
+// Por fecha exacta YYYY-MM-DD
+export async function getEphemerisByDate(date: string): Promise<Ephemeris[]> {
+  return queryEphemerides(
+    supabase.from('ephemerides').select('*').eq('date', date)
+  )
+}
+
+// Por display_date (MM-DD)
+export async function getEphemerisByDisplayDate(displayDate: string): Promise<Ephemeris[]> {
+  return queryEphemerides(
+    supabase.from('ephemerides').select('*').eq('display_date', displayDate).order('date', { ascending: true })
+  )
+}
+
+// Hoy (MM-DD)
 export async function getTodayEphemerides(): Promise<Ephemeris[]> {
   const today = new Date()
-  const displayDate = `${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`
+  const displayDate = `${(today.getMonth() + 1)
+    .toString()
+    .padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`
   
   return getEphemerisByDisplayDate(displayDate)
 }
 
-// Función para obtener efemérides por display_date (formato MM-DD)
-export async function getEphemerisByDisplayDate(displayDate: string): Promise<Ephemeris[]> {
-  const { data, error } = await supabase
-    .from('ephemerides')
-    .select('*')
-    .eq('display_date', displayDate)
-    .order('date', { ascending: true })
-
-  if (error) {
-    console.error('Error fetching ephemerides by display date:', error)
-    return []
-  }
-
-  return data || []
-}
-
-// Función para obtener una efeméride aleatoria del día actual
+// Una aleatoria de hoy
 export async function getTodayRandomEphemeris(): Promise<Ephemeris | null> {
   const todayEphemerides = await getTodayEphemerides()
-  
-  if (todayEphemerides.length === 0) {
-    // Si no hay efemérides para hoy, obtener una aleatoria de cualquier día
-    return getRandomEphemeris()
-  }
-  
-  const randomIndex = Math.floor(Math.random() * todayEphemerides.length)
-  return todayEphemerides[randomIndex]
+  if (todayEphemerides.length === 0) return getRandomEphemeris()
+  return todayEphemerides[Math.floor(Math.random() * todayEphemerides.length)]
 }
 
-// Función para obtener una efeméride aleatoria de cualquier día
+// Aleatoria global (más eficiente que traer todas)
 export async function getRandomEphemeris(): Promise<Ephemeris | null> {
   const { data, error } = await supabase
     .from('ephemerides')
     .select('*')
+    .order('RANDOM()')
+    .limit(1)
 
   if (error) {
     console.error('Error fetching random ephemeris:', error)
     return null
   }
 
-  if (!data || data.length === 0) return null
-
-  const randomIndex = Math.floor(Math.random() * data.length)
-  return data[randomIndex]
+  return data?.[0] || null
 }
 
-// Función para agregar una nueva efeméride
-export async function addEphemeris(ephemeris: Omit<Ephemeris, 'id' | 'created_at' | 'updated_at'>): Promise<Ephemeris | null> {
-  // Si no se proporciona display_date, calcularlo desde la fecha
-  if (!ephemeris.display_date && ephemeris.date) {
-    const date = new Date(ephemeris.date)
-    ephemeris.display_date = `${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`
+// Insertar
+export async function addEphemeris(
+  ephemeris: Omit<Ephemeris, 'id' | 'created_at' | 'updated_at'>
+): Promise<Ephemeris | null> {
+  const newEphemeris = {
+    ...ephemeris,
+    display_date:
+      ephemeris.display_date ??
+      (ephemeris.date
+        ? `${(new Date(ephemeris.date).getMonth() + 1)
+            .toString()
+            .padStart(2, '0')}-${new Date(ephemeris.date)
+            .getDate()
+            .toString()
+            .padStart(2, '0')}`
+        : undefined),
   }
-
-  console.log('Attempting to insert ephemeris:', ephemeris)
 
   const { data, error } = await supabase
     .from('ephemerides')
-    .insert([ephemeris])
+    .insert([newEphemeris])
     .select()
     .single()
 
   if (error) {
     console.error('Error adding ephemeris:', error)
-    throw error // Lanzar el error para que se maneje en el API
+    return null
   }
 
-  console.log('Successfully inserted ephemeris:', data)
   return data
 }
 
-// Función para obtener efemérides por fecha específica
-export async function getEphemerisByDate(date: string): Promise<Ephemeris[]> {
-  const { data, error } = await supabase
-    .from('ephemerides')
-    .select('*')
-    .eq('date', date)
-
-  if (error) {
-    console.error('Error fetching ephemerides by date:', error)
-    return []
-  }
-
-  return data || []
-}
-
-// Función para obtener todas las fechas con efemérides (formato MM-DD)
+// Todas las fechas disponibles (MM-DD únicas)
 export async function getAvailableDates(): Promise<string[]> {
   const { data, error } = await supabase
     .from('ephemerides')
@@ -144,7 +132,6 @@ export async function getAvailableDates(): Promise<string[]> {
     return []
   }
 
-  // Obtener fechas únicas
-  const uniqueDates = [...new Set(data.map(item => item.display_date))]
+  const uniqueDates = [...new Set(data.map(item => item.display_date))] as string[]
   return uniqueDates.sort()
 }

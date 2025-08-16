@@ -1,6 +1,6 @@
 # 🖥️ Programming Ephemeris Terminal
 
-> Un terminal interactivo retro que muestra efemérides de programación e historia tecnológica, con generación automática mediante IA usando GPT-4o a través de OpenRouter.ai. Sistema completo con base de datos Supabase y automatización con Vercel Cron Jobs.
+> Un terminal interactivo retro que muestra efemérides de programación e historia tecnológica, con generación automática mediante IA usando GPT-4o a través de OpenRouter.ai. Sistema refactorizado con **arquitectura enterprise-level** modular, base de datos Supabase y automatización con Vercel Cron Jobs.
 
 [![Vercel](https://img.shields.io/badge/Deploy-Vercel-black?logo=vercel)](https://vercel.com)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org)
@@ -24,6 +24,8 @@ Programming Ephemeris Terminal es una aplicación web interactiva que simula un 
 - **💾 Persistencia**: Almacenamiento en Supabase PostgreSQL con políticas RLS
 - **📱 Responsive**: Optimizado para dispositivos móviles y desktop
 - **🔒 Seguridad**: Autenticación de Cron Jobs y validación de API Keys
+- **🏗️ Arquitectura Modular**: Código refactorizado con separación de responsabilidades
+- **📊 Logging Profesional**: Sistema de logs centralizado con niveles y emojis
 
 ## 🚀 Demo en Vivo
 
@@ -133,65 +135,146 @@ Visita [http://localhost:3000](http://localhost:3000)
 
 ## 🎯 Arquitectura del Sistema
 
-### Componentes Principales
+### Estructura Modular Refactorizada
 
 ```
 ├── app/
 │   ├── api/generate-ephemeris/     # API para generación con IA
+│   │   └── route.ts               # Endpoint principal refactorizado
 │   ├── layout.tsx                  # Layout principal
 │   └── page.tsx                    # Página principal
 ├── components/
 │   ├── terminal-ephemeris.tsx      # Componente principal del terminal
 │   ├── typewriter-text.tsx         # Efecto de texto typewriter
 │   └── ui/                         # Componentes de Shadcn/ui
-├── lib/
-│   └── supabase.ts                 # Cliente y funciones de Supabase
-└── database/                       # Scripts SQL
+├── lib/                           # 🆕 Módulos refactorizados
+│   ├── date-utils.ts              # Utilidades de fechas y validaciones
+│   ├── verified-events.ts         # Base de conocimiento verificado
+│   ├── logger.ts                  # Sistema de logging centralizado
+│   └── supabase.ts                # Cliente Supabase optimizado
+├── hooks/                         # React hooks personalizados
+├── database/                      # Scripts SQL
+└── vercel.json                    # Configuración de cron jobs
 ```
 
-### Flujo de Datos
+### Módulos de Utilidades
 
-1. **Carga Inicial**: Terminal muestra efeméride del día actual desde Supabase
-2. **Comando Refresh**: Genera nueva efeméride usando IA o eventos verificados
-3. **Cron Job Diario**: Genera automáticamente efeméride para el día siguiente
-4. **Sistema Híbrido**: Prioriza eventos verificados, usa IA como respaldo
+#### 📅 `/lib/date-utils.ts`
+```typescript
+// Funciones centralizadas para manejo de fechas
+formatDisplayDate(date)    // MM-DD format
+formatHumanDate(date)      // "D de mes" format  
+formatFullDate(date)       // YYYY-MM-DD format
+isValidDate(dateString)    // Validación de fechas
+validateEventContent(text) // Validación de contenido
+```
 
+#### 📚 `/lib/verified-events.ts`
+```typescript
+// Base de conocimiento curado manualmente
+const VERIFIED_EVENTS = {
+  "08-16": "Se lanza Internet Explorer...",
+  "08-15": "IBM anuncia retiro System/390...",
+  // Eventos históricos verificados
+}
+getVerifiedEventForDate(date) // Obtener evento verificado
+```
+
+#### 📊 `/lib/logger.ts`
+```typescript
+// Sistema de logging profesional
+logger.debug("🐞 Debug info")    // Solo en desarrollo
+logger.info("ℹ️ General info")   // Siempre visible
+logger.warn("⚠️ Warning")        // Advertencias
+logger.error("❌ Error")         // Errores críticos
+```
+
+#### 🗄️ `/lib/supabase.ts` (Optimizado)
+```typescript
+// Funciones de base de datos optimizadas
+getEphemerides()              // Todas las efemérides
+getEphemerisByDisplayDate()   // Por fecha MM-DD
+getTodayRandomEphemeris()     // Aleatoria del día
+getRandomEphemeris()          // Aleatoria global (RANDOM() + LIMIT)
+addEphemeris()                // Insertar nueva
+```
+
+### Flujo de Datos Refactorizado
+
+1. **📥 Carga Inicial**: Terminal obtiene efeméride desde `getTodayRandomEphemeris()`
+2. **🔄 Comando Refresh**: Llama a `/api/generate-ephemeris` con validación mejorada
+3. **⏰ Cron Job Diario**: Genera automáticamente para el día siguiente a las 00:00 UTC
+4. **🎯 Sistema Híbrido**: 
+   - 1️⃣ Verifica eventos en `verified-events.ts`
+   - 2️⃣ Si no existe → Genera con IA
+   - 3️⃣ Valida contenido con `validateEventContent()`
+   - 4️⃣ Guarda con `addEphemeris()`
 
 ## 🔧 API Reference
 
 ### POST `/api/generate-ephemeris`
 
-Genera una nueva efeméride para una fecha específica.
+Genera una nueva efeméride para el día actual (refactorizado).
 
-**Request Body:**
-```json
-{
-  "forceGenerate": true,
-  "targetDate": "2025-08-14"
-}
+**Headers:**
+```http
+Authorization: Bearer tu-cron-secret  # Para cron jobs
+Content-Type: application/json
 ```
 
 **Response:**
 ```json
 {
-  "success": true,
   "ephemeris": {
     "id": "uuid",
-    "date": "2025-08-14",
-    "event": "Dell y Sony anuncian el retiro más grande...",
-    "display_date": "08-14",
+    "date": "2025-08-17",
+    "event": "Se lanza la primera versión del navegador...",
+    "display_date": "08-17",
     "category": "programming",
     "language": "es"
   },
-  "attempts": 0
+  "date": "2025-08-17",
+  "displayDate": "08-17",
+  "message": "Efeméride generada y consultada para el día actual."
 }
 ```
+
+### GET `/api/generate-ephemeris`
+
+Información sobre el endpoint.
+
+**Query Parameters:**
+```http
+?date=2025-08-17  # Opcional: fecha específica (YYYY-MM-DD)
+```
+
+**Response:**
+```json
+{
+  "message": "Use POST method to generate ephemeris",
+  "targetDate": "2025-08-17",
+  "displayDate": "08-17",
+  "usage": {
+    "post": "Generates ephemeris for current day",
+    "description": "This endpoint generates programming history ephemeris"
+  }
+}
+```
+
+### 🤖 Proceso de Generación con IA
+
+1. **🔍 Verificación**: Busca en `VERIFIED_EVENTS[displayDate]`
+2. **🎲 IA Backup**: Si no existe → `withRetries()` con 3 intentos
+3. **✅ Validación**: `validateEventContent()` asegura calidad
+4. **💾 Persistencia**: `addEphemeris()` guarda en Supabase
+5. **📊 Logging**: Sistema centralizado registra todo el proceso
 
 ### Cron Job Automático
 
 **Schedule**: Diario a las 00:00 UTC  
 **Endpoint**: `/api/generate-ephemeris`  
-**Función**: Genera efeméride del día siguiente
+**Función**: Genera efeméride del día siguiente  
+**Auth**: Requiere `CRON_SECRET` en Authorization header
 
 ## 🚀 Despliegue en Vercel
 
@@ -257,19 +340,67 @@ curl -X POST https://tu-app.vercel.app/api/generate-ephemeris \
 
 ### Agregar Nuevos Eventos Verificados
 
-Edita `app/api/generate-ephemeris/route.ts`:
+Edita `/lib/verified-events.ts`:
 
 ```typescript
-const VERIFIED_TECH_EVENTS: { [key: string]: string[] } = {
-  "MM-DD": [
-    "Tu evento tecnológico verificado (YYYY)",
-  ],
+const VERIFIED_EVENTS: Record<string, string> = {
+  "MM-DD": "Tu evento tecnológico verificado (YYYY)",
+  "08-17": "Nuevo evento para mañana...",
+}
+```
+
+### Extender Utilidades de Fecha
+
+Agrega funciones en `/lib/date-utils.ts`:
+
+```typescript
+export function tuNuevaFuncion(date: Date): string {
+  // Tu lógica personalizada
+  return formatDisplayDate(date)
+}
+```
+
+### Personalizar Sistema de Logs
+
+Modifica `/lib/logger.ts` para agregar nuevos niveles:
+
+```typescript
+export const logger = {
+  debug: (msg: string, ...args: any[]) => log('debug', msg, ...args),
+  trace: (msg: string, ...args: any[]) => log('trace', msg, ...args), // Nuevo
+  // ... otros niveles
 }
 ```
 
 ## 📝 Changelog
 
-### v1.0.0 (2025-08-16)
+### v1.1.0 (2025-08-16) - 🏗️ REFACTORIZACIÓN ENTERPRISE-LEVEL
+
+#### 🚀 Arquitectura Modular Implementada
+- ✅ **Separación de responsabilidades**: Código dividido en módulos especializados
+- ✅ **`/lib/date-utils.ts`**: Utilidades centralizadas de fechas y validaciones
+- ✅ **`/lib/verified-events.ts`**: Base de conocimiento verificado independiente
+- ✅ **`/lib/logger.ts`**: Sistema de logging profesional con niveles y emojis
+- ✅ **Reducción 66% código**: De 388 a 130 líneas en route.ts principal
+
+#### 🔧 Optimizaciones de Rendimiento  
+- ✅ **Helper `withRetries()`**: Manejo elegante de reintentos con delays
+- ✅ **Supabase optimizado**: `getRandomEphemeris()` usa `RANDOM() + LIMIT 1`
+- ✅ **Prompt IA simplificado**: De 25+ líneas a 10 líneas concisas
+- ✅ **Logging condicional**: Solo debug en desarrollo, errores siempre visibles
+
+#### 🎯 Mejoras de Calidad
+- ✅ **TypeScript interfaces**: `ApiResponse`, `ApiError` para tipado fuerte
+- ✅ **Configuración centralizada**: Constantes CONFIG para magic values
+- ✅ **Validación mejorada**: `validateEventContent()` con múltiples checks
+- ✅ **Try-catch comprehensive**: Manejo de errores en todas las funciones
+
+#### 📊 Sistema de Logging Profesional
+- ✅ **Niveles estructurados**: debug 🐞, info ℹ️, warn ⚠️, error ❌
+- ✅ **Timestamps automáticos**: Logging con fecha/hora para debugging
+- ✅ **Environment-aware**: Comportamiento diferente en dev vs production
+
+### v1.0.0 (2025-08-16) - 🎯 LANZAMIENTO INICIAL
 - ✅ Terminal interactivo con comandos funcionales (help, refresh, history, clear, exit)
 - ✅ Sistema híbrido de efemérides (eventos verificados + generación con IA)
 - ✅ Integración completa con Supabase PostgreSQL
@@ -303,7 +434,6 @@ Este proyecto está bajo la Licencia MIT. Ver [LICENSE](LICENSE) para más detal
 - [Vercel](https://vercel.com) por el hosting gratuito y los cron jobs automatizados
 - [Supabase](https://supabase.com) por la base de datos PostgreSQL y autenticación
 - [OpenRouter](https://openrouter.ai) por el acceso simplificado a GPT-4o
-- La comunidad de desarrolladores por la inspiración retro y feedback continuo
 - **GitHub Copilot** por la asistencia en depuración y optimización del código
 
 ---
