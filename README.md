@@ -1,39 +1,42 @@
 # 🖥️ Programming Ephemeris Terminal
 
-> Un terminal interactivo retro que muestra efemérides de programación e historia tecnológica, con generación automática mediante IA basado en un ejemplo de VIBE CODING mostrado por MoureDev, este sistema usa la API de GPT-4 mediante Openrouter.ai. 
+> Un terminal interactivo retro que muestra efemérides de programación e historia tecnológica, con generación automática mediante IA usando GPT-4o a través de OpenRouter.ai. Sistema completo con base de datos Supabase y automatización con Vercel Cron Jobs.
 
 [![Vercel](https://img.shields.io/badge/Deploy-Vercel-black?logo=vercel)](https://vercel.com)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org)
+[![React](https://img.shields.io/badge/React-19-blue?logo=react)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org)
 [![Supabase](https://img.shields.io/badge/Supabase-Database-green?logo=supabase)](https://supabase.com)
 [![OpenRouter](https://img.shields.io/badge/OpenRouter-AI-orange)](https://openrouter.ai)
-
-
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 📖 Descripción
 
-Programming Ephemeris Terminal es una aplicación web interactiva que simula un terminal retro y muestra datos históricos relevantes sobre programación, tecnología e informática. El proyecto combina nostalgia visual con tecnología moderna para crear una experiencia educativa única.
+Programming Ephemeris Terminal es una aplicación web interactiva que simula un terminal retro y muestra eventos históricos relevantes sobre programación, tecnología e informática. El proyecto combina nostalgia visual con tecnología moderna para crear una experiencia educativa única que genera automáticamente contenido histórico verificado.
 
 ### ✨ Características Principales
 
-- **🖥️ Terminal Retro**: Interfaz que simula una terminal clásica con efectos typewriter
-- **📅 Efemérides Diarias**: Eventos históricos de programación mostrados cada día
-- **🤖 IA Integrada**: Generación automática de efemérides mediante GPT-4o
-- **🔄 Sistema Híbrido**: Eventos verificados manualmente + generación con IA
-- **⏰ Automatización**: Cron jobs que generan nuevas efemérides diariamente
-- **💾 Base de Datos**: Almacenamiento persistente en Supabase
+- **🖥️ Terminal Retro**: Interfaz que simula una terminal clásica con efectos typewriter animados
+- **📅 Efemérides Diarias**: Eventos históricos de programación mostrados automáticamente cada día
+- **🤖 IA Integrada**: Generación automática de efemérides mediante GPT-4o con validación histórica
+- **🔄 Sistema Híbrido**: Base de conocimiento verificado + generación inteligente con IA
+- **⏰ Automatización Completa**: Cron jobs que generan nuevas efemérides diariamente a las 00:00 UTC
+- **💾 Persistencia**: Almacenamiento en Supabase PostgreSQL con políticas RLS
 - **📱 Responsive**: Optimizado para dispositivos móviles y desktop
+- **🔒 Seguridad**: Autenticación de Cron Jobs y validación de API Keys
 
 ## 🚀 Demo en Vivo
 
 **[🌐 Ver Demo](https://programming-ephemeris-terminal.vercel.app)**
 
-### Comandos Disponibles
-- `help` - Mostrar ayuda
-- `refresh` - Generar nueva efeméride del día
-- `history` - Ver historial de comandos
-- `clear` - Limpiar pantalla
-- `exit` - Salir del sistema
+### Comandos Disponibles del Terminal
+```bash
+help      # Mostrar todos los comandos disponibles
+refresh   # Generar nueva efeméride del día actual
+history   # Ver historial completo de comandos ejecutados
+clear     # Limpiar pantalla del terminal
+exit      # Mostrar mensaje de despedida
+```
 
 ## 🛠️ Stack Tecnológico
 
@@ -153,19 +156,6 @@ Visita [http://localhost:3000](http://localhost:3000)
 3. **Cron Job Diario**: Genera automáticamente efeméride para el día siguiente
 4. **Sistema Híbrido**: Prioriza eventos verificados, usa IA como respaldo
 
-### Base de Eventos Verificados
-
-El sistema incluye 20+ eventos tecnológicos verificados:
-- 01 enero: Era UNIX (1970)
-- 09 enero: Presentación iPhone (2007) 
-- 24 enero: Apple Macintosh (1984)
-- 05 febrero: Facebook (2004)
-- 01 abril: Apple fundada (1976)
-- 04 abril: Microsoft fundada (1975)
-- **14 agosto: Dell/Sony retiro baterías (2006)**
-- 24 agosto: Windows 95 (1995)
-- 04 septiembre: Google fundado (1998)
-- 05 octubre: Muerte Steve Jobs (2011)
 
 ## 🔧 API Reference
 
@@ -279,14 +269,18 @@ const VERIFIED_TECH_EVENTS: { [key: string]: string[] } = {
 
 ## 📝 Changelog
 
-### v1.0.0 (2025-08-14)
-- ✅ Terminal interactivo con comandos
-- ✅ Sistema híbrido de efemérides (verificadas + IA)
-- ✅ Integración con Supabase
-- ✅ Generación automática con GPT-4o
-- ✅ Cron jobs diarios en Vercel
-- ✅ Base de datos de eventos verificados
-- ✅ Diseño responsive y retro
+### v1.0.0 (2025-08-16)
+- ✅ Terminal interactivo con comandos funcionales (help, refresh, history, clear, exit)
+- ✅ Sistema híbrido de efemérides (eventos verificados + generación con IA)
+- ✅ Integración completa con Supabase PostgreSQL
+- ✅ Generación automática con GPT-4o mediante OpenRouter
+- ✅ Cron jobs diarios automatizados en Vercel (00:00 UTC)
+- ✅ Base de conocimiento de 20+ eventos tecnológicos verificados
+- ✅ Validación histórica mejorada y eliminación de código redundante
+- ✅ Corrección de eventos incorrectos (ej: Wikipedia fecha corregida)
+- ✅ Diseño responsive y retro con efectos typewriter
+- ✅ Autenticación de API con CRON_SECRET para seguridad
+- ✅ Sistema de logs detallado para debugging y monitoreo
 
 ## 📄 Licencia
 
@@ -304,8 +298,14 @@ Este proyecto está bajo la Licencia MIT. Ver [LICENSE](LICENSE) para más detal
 
 ## 🙏 Agradecimientos
 
-- [Shadcn/ui](https://ui.shadcn.com) por los componentes de UI
-- [Vercel](https://vercel.com) por el hosting gratuito
-- [Supabase](https://supabase.com) por la base de datos
-- [OpenRouter](https://openrouter.ai) por el acceso a GPT-4o
-- La comunidad de desarrolladores por la inspiración retro
+- **MoureDev** por la inspiración original con su ejemplo de VIBE CODING que motivó este proyecto
+- [Shadcn/ui](https://ui.shadcn.com) por los componentes de UI elegantes y accesibles
+- [Vercel](https://vercel.com) por el hosting gratuito y los cron jobs automatizados
+- [Supabase](https://supabase.com) por la base de datos PostgreSQL y autenticación
+- [OpenRouter](https://openrouter.ai) por el acceso simplificado a GPT-4o
+- La comunidad de desarrolladores por la inspiración retro y feedback continuo
+- **GitHub Copilot** por la asistencia en depuración y optimización del código
+
+---
+
+💻 **Desarrollado con pasión por la historia de la programación** 💻

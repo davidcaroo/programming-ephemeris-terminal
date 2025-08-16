@@ -6,60 +6,6 @@ import { useState, useEffect, useRef } from "react"
 import { TypewriterText } from "./typewriter-text"
 import { getTodayRandomEphemeris, getRandomEphemeris, type Ephemeris } from "@/lib/supabase"
 
-// Datos de respaldo en caso de que Supabase no esté disponible
-const fallbackEphemerides = [
-  {
-    date: "1815-12-10",
-    event:
-      "Nace Ada Lovelace, considerada la primera programadora de la historia por su trabajo en la Máquina Analítica de Charles Babbage.",
-  },
-  {
-    date: "1945-02-14",
-    event:
-      "Se presenta ENIAC, una de las primeras computadoras electrónicas de propósito general, pesaba 30 toneladas.",
-  },
-  {
-    date: "1969-10-29",
-    event: "Se envía el primer mensaje a través de ARPANET entre UCLA y Stanford, naciendo así Internet.",
-  },
-  {
-    date: "1971-01-01",
-    event:
-      "Ray Tomlinson envía el primer email de la historia e introduce el símbolo '@' para las direcciones de correo.",
-  },
-  {
-    date: "1975-04-04",
-    event: "Bill Gates y Paul Allen fundan Microsoft en Albuquerque, Nuevo México.",
-  },
-  {
-    date: "1976-04-01",
-    event: "Steve Jobs, Steve Wozniak y Ronald Wayne fundan Apple Computer Company.",
-  },
-  {
-    date: "1991-08-06",
-    event: "Tim Berners-Lee publica la primera página web de la historia en el CERN.",
-  },
-  {
-    date: "1995-05-23",
-    event: "Brendan Eich crea JavaScript en solo 10 días mientras trabajaba en Netscape.",
-  },
-  {
-    date: "1998-09-04",
-    event: "Larry Page y Sergey Brin fundan Google en un garaje de Menlo Park, California.",
-  },
-  {
-    date: "2004-02-04",
-    event: "Mark Zuckerberg lanza Facebook desde su dormitorio en Harvard.",
-  },
-  {
-    date: "2007-01-09",
-    event: "Steve Jobs presenta el primer iPhone, revolucionando la computación móvil.",
-  },
-  {
-    date: "2008-01-03",
-    event: "Se mina el primer bloque de Bitcoin, creado por el misterioso Satoshi Nakamoto.",
-  },
-]
 
 export function TerminalEphemeris() {
   const [currentTime, setCurrentTime] = useState("")
@@ -105,49 +51,38 @@ export function TerminalEphemeris() {
   // Función para cargar efeméride del día actual
   const loadTodayEphemeris = async () => {
     try {
+      // Primero intentar obtener efeméride existente
       const todayEphemeris = await getTodayRandomEphemeris()
-
       if (todayEphemeris) {
         setTodayEphemeris(todayEphemeris.event)
         setIsShowingTodayEphemeris(true)
-      } else {
-        // Si no hay efemérides para hoy, usar datos de respaldo del día actual
-        const today = new Date()
-        const displayDate = `${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`
-        const fallbackForToday = fallbackEphemerides.find(e => {
-          const date = new Date(e.date)
-          const fallbackDisplayDate = `${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`
-          return fallbackDisplayDate === displayDate
-        })
-
-        if (fallbackForToday) {
-          setTodayEphemeris(fallbackForToday.event)
-        } else {
-          // Si tampoco hay en fallback para hoy, usar uno aleatorio
-          const randomIndex = Math.floor(Math.random() * fallbackEphemerides.length)
-          const selectedEphemeris = fallbackEphemerides[randomIndex]
-          setTodayEphemeris(selectedEphemeris.event)
-        }
-        setIsShowingTodayEphemeris(true)
+        return
       }
-    } catch (error) {
-      console.error('Error fetching today ephemeris:', error)
-      // Usar datos de respaldo del día actual
-      const today = new Date()
-      const displayDate = `${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`
-      const fallbackForToday = fallbackEphemerides.find(e => {
-        const date = new Date(e.date)
-        const fallbackDisplayDate = `${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`
-        return fallbackDisplayDate === displayDate
+
+      // Si no hay efeméride para hoy, generar una nueva llamando a la API
+      console.log('No hay efeméride para hoy, generando una nueva...')
+      const response = await fetch('/api/generate-ephemeris', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ forceGenerate: true })
       })
 
-      if (fallbackForToday) {
-        setTodayEphemeris(fallbackForToday.event)
+      if (response.ok) {
+        const result = await response.json()
+        if (result.ephemeris) {
+          setTodayEphemeris(result.ephemeris.event)
+          setIsShowingTodayEphemeris(true)
+          return
+        }
       } else {
-        const randomIndex = Math.floor(Math.random() * fallbackEphemerides.length)
-        const selectedEphemeris = fallbackEphemerides[randomIndex]
-        setTodayEphemeris(selectedEphemeris.event)
+        console.error('Error al generar efeméride:', await response.text())
       }
+
+      setTodayEphemeris("No se pudo cargar ni generar efeméride para hoy.")
+      setIsShowingTodayEphemeris(true)
+    } catch (error) {
+      console.error('Error fetching today ephemeris:', error)
+      setTodayEphemeris("Error al cargar efeméride del día.")
       setIsShowingTodayEphemeris(true)
     }
   }
@@ -156,23 +91,16 @@ export function TerminalEphemeris() {
   const selectRandomEphemeris = async () => {
     try {
       const randomEphemeris = await getRandomEphemeris()
-
       if (randomEphemeris) {
         setTodayEphemeris(randomEphemeris.event)
         setIsShowingTodayEphemeris(false)
       } else {
-        // Usar datos de respaldo si Supabase no está disponible
-        const randomIndex = Math.floor(Math.random() * fallbackEphemerides.length)
-        const selectedEphemeris = fallbackEphemerides[randomIndex]
-        setTodayEphemeris(selectedEphemeris.event)
+        setTodayEphemeris("No hay efeméride  disponible.")
         setIsShowingTodayEphemeris(false)
       }
     } catch (error) {
       console.error('Error fetching random ephemeris:', error)
-      // Usar datos de respaldo en caso de error
-      const randomIndex = Math.floor(Math.random() * fallbackEphemerides.length)
-      const selectedEphemeris = fallbackEphemerides[randomIndex]
-      setTodayEphemeris(selectedEphemeris.event)
+      setTodayEphemeris("No hay efeméride disponible.")
       setIsShowingTodayEphemeris(false)
     }
   }
@@ -184,20 +112,15 @@ export function TerminalEphemeris() {
     switch (trimmedCommand) {
       case "refresh":
         setIsRefreshing(true)
-        setCommandHistory((prev) => [...prev, "Generando nueva efeméride del día con IA..."])
+        setCommandHistory((prev) => [...prev, "Generando nueva efeméride del día..."])
         setTimeout(async () => {
           try {
-            // Enviar parámetros para forzar generación para el día actual
-            const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+            // Llamar directamente al endpoint POST para generar nueva efeméride
             const response = await fetch('/api/generate-ephemeris', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                forceGenerate: true,
-                targetDate: today
-              })
+              }
             })
 
             const result = await response.json()
@@ -205,20 +128,15 @@ export function TerminalEphemeris() {
             if (response.ok && result.ephemeris) {
               setTodayEphemeris(result.ephemeris.event)
               setIsShowingTodayEphemeris(false)
-              setCommandHistory((prev) => [...prev, "✓ Nueva efeméride generada con IA y guardada"])
-            } else if (response.ok && result.existing) {
-              // Si ya existe una efeméride, usar esa
-              setTodayEphemeris(result.ephemeris.event)
-              setIsShowingTodayEphemeris(false)
-              setCommandHistory((prev) => [...prev, "✓ Efeméride del día cargada desde base de datos"])
+              setCommandHistory((prev) => [...prev, "✓ Nueva efeméride generada y guardada"])
             } else {
-              // Si falla la IA, usar efeméride del día como respaldo
+              // Si falla, usar efeméride del día como respaldo
               await loadTodayEphemeris()
               setCommandHistory((prev) => [...prev, "✓ Efeméride del día cargada (respaldo)"])
             }
           } catch (error) {
             console.error('Error generating ephemeris:', error)
-            // Si falla la IA, usar efeméride del día como respaldo
+            // Si falla, usar efeméride del día como respaldo
             await loadTodayEphemeris()
             setCommandHistory((prev) => [...prev, "✓ Efeméride del día cargada (respaldo)"])
           }
@@ -311,7 +229,7 @@ export function TerminalEphemeris() {
           <div className="bg-gray-900 border border-green-400 rounded-lg p-6 mb-6">
             <div className="text-orange-400 text-lg font-bold mb-4 flex items-center">
               <span className="mr-2">📅</span>
-              {isShowingTodayEphemeris ? "EFEMÉRIDE DEL DÍA" : "EFEMÉRIDE ALEATORIA"}
+              {isShowingTodayEphemeris ? "EFEMÉRIDE DEL DÍA" : "EFEMÉRIDE DE TECNOLOGÍA"}
               {isRefreshing && <span className="ml-2 text-sm animate-pulse">Actualizando...</span>}
             </div>
             <div className="text-green-400 mb-4">
